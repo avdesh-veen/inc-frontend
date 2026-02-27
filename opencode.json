@@ -1,8 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "openai": {}
-  },
-  "model": "openai/gpt-4.1",
-  "small_model": "openai/gpt-4.1-mini"
+  "model": "opencode/trinity-large-preview-free",
+  "small_model": "opencode/trinity-large-preview-free"
 }
