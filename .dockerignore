@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+.pnpm-store
+
+# Build / cache
+.next
+out
+build
+dist
+
+# Git and IDE
+.git
+.gitignore
+.cursor
+.vscode
+*.md
+!README.md
+
+# Tests and tooling
+__tests__
+coverage
+*.test.*
+*.spec.*
+jest.config.js
+jest.setup.js
+.eslintrc*
+eslint.config.mjs
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# Misc
+Dockerfile*
+.dockerignore
+*.log
+.DS_Store

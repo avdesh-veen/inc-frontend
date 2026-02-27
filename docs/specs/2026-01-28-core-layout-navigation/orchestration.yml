@@ -1,0 +1,15 @@
+task_groups:
+  - name: "Foundation: Theme System & Design Tokens"
+    claude_code_subagent: implementer
+  - name: "Foundation: App Shell & Layout Structure"
+    claude_code_subagent: implementer
+  - name: "Feature: Sidebar Navigation Structure"
+    claude_code_subagent: implementer
+  - name: "Feature: Brand Header & User Profile"
+    claude_code_subagent: implementer
+  - name: "Feature: Top Navigation Bar"
+    claude_code_subagent: implementer
+  - name: "Polish: Styling & Accessibility"
+    claude_code_subagent: implementer
+  - name: "Integration: Testing & Documentation"
+    claude_code_subagent: implementer

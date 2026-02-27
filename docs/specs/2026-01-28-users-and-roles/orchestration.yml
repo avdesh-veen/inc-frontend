@@ -1,0 +1,15 @@
+task_groups:
+  - name: Types and Static Data
+    claude_code_subagent: implementer
+  - name: Shared UI Components
+    claude_code_subagent: implementer
+  - name: Users Tab Implementation
+    claude_code_subagent: implementer
+  - name: User Create/Edit Drawer
+    claude_code_subagent: implementer
+  - name: Role Definitions Tab
+    claude_code_subagent: implementer
+  - name: External Roles Tab
+    claude_code_subagent: implementer
+  - name: Page Integration and Final Testing
+    claude_code_subagent: implementer

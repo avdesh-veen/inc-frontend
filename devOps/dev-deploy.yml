@@ -1,0 +1,87 @@
+# ADO Dev Deploy Pipeline – Frontend: build & push to DEV ACR → redeploy Container App
+
+trigger:
+  branches:
+    include:
+      - dev
+
+pr:
+  branches:
+    include:
+      - none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  imageRepository: 'emerald-frontend'
+  imageTag: '$(Build.BuildId)'
+
+stages:
+
+  # When pipeline is triggered by PR – skip build/deploy
+  - stage: PR_Triggered
+    displayName: 'PR Triggered - Deployment Skipped'
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    jobs:
+      - job: PR_Message
+        steps:
+          - script: |
+              echo "Pipeline triggered by Pull Request."
+              echo "Skipping build and deployment stages."
+              echo "PR validation completed successfully."
+            displayName: 'PR Validation Message'
+
+  # Build, push to ACR, and redeploy Container App (only when NOT PR)
+  - stage: BuildAndPush
+    displayName: 'Build, push to ACR & redeploy Container App'
+    condition: ne(variables['Build.Reason'], 'PullRequest')
+    jobs:
+      - job: BuildPushAndDeploy
+        displayName: 'Build image, push to ACR, update Container App'
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: Docker@2
+            displayName: 'Build frontend image (runner stage)'
+            inputs:
+              command: build
+              containerRegistry: '$(ACR_SERVICE_CONNECTION)'
+              repository: '$(imageRepository)'
+              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+              buildContext: '$(Build.SourcesDirectory)'
+              tags: |
+                $(imageTag)
+                latest
+              arguments: |
+                --target runner
+                --build-arg NEXT_PUBLIC_API_URL=$(API_BASE_URL)
+                --build-arg API_BASE_URL=$(API_BASE_URL)
+                --build-arg NEXT_PUBLIC_API_TIMEOUT=$(NEXT_PUBLIC_API_TIMEOUT)
+
+          - task: Docker@2
+            displayName: 'Push image to ACR'
+            inputs:
+              command: push
+              containerRegistry: '$(ACR_SERVICE_CONNECTION)'
+              repository: '$(imageRepository)'
+              tags: |
+                $(imageTag)
+                latest
+
+          - task: AzureCLI@2
+            displayName: 'Redeploy Container App with new image'
+            inputs:
+              azureSubscription: '$(AZURE_SERVICE_CONNECTION)'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                FULL_IMAGE="$(ACR_LOGIN_SERVER)/$(imageRepository):$(imageTag)"
+                echo "Updating Container App to image: $FULL_IMAGE"
+                az containerapp update \
+                  --name '$(CONTAINER_APP_NAME)' \
+                  --resource-group '$(CONTAINER_APP_RESOURCE_GROUP)' \
+                  --image "$FULL_IMAGE" \
+                  --revision-suffix "b$(imageTag)"
+                echo "Container App updated successfully to image tag $(imageTag)."
