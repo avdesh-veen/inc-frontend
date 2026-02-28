@@ -1,8 +1,22 @@
+
 {
   "$schema": "https://opencode.ai/config.json",
   "provider": {
     "openai": {}
   },
-  "model": "openai/gpt-4.1",
-  "small_model": "openai/gpt-4.1-mini"
+  "model": "opencode/trinity-large-preview-free",
+  "small_model": "opencode/trinity-large-preview-free",
+
+  "mcp": {
+    "jira": {
+      "type": "local",
+      "command": ["uvx", "mcp-atlassian"],
+      "enabled": true,
+      "environment": {
+        "JIRA_URL": "https://ditstek-agent.atlassian.net",
+        "JIRA_USERNAME": "{env:JIRA_EMAIL}",
+        "JIRA_API_TOKEN": "{env:JIRA_API_TOKEN}"
+      }
+    }
+  }
 }
