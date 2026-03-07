@@ -359,7 +359,3 @@ const ClientsList: React.FC = () => {
 };
 
 export default ClientsList;
-
-const ciRepairTest = 1;;
-
-const ciRepairTypecheckTest: string = 123;
