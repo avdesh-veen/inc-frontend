@@ -12,28 +12,44 @@ import { Client, ClientListItem, ClientRequest } from "../../types";
 /**
  * Fetch clients list (client-side)
  */
-export async function getClientsListClient(request?: ClientRequest): Promise<ApiResponse<PaginatedResponse<ClientListItem>>> {
+export async function getClientsListClient(
+  request?: ClientRequest,
+): Promise<ApiResponse<PaginatedResponse<ClientListItem>>> {
   const queryParams: Record<string, string> = {};
-  
+
   if (request?.page) queryParams.page = String(request.page);
   if (request?.limit) queryParams.limit = String(request.limit);
   if (request?.search) queryParams.search = String(request.search);
   if (request?.type) queryParams.type = String(request.type);
-  if (request?.accountTier) queryParams.accountTier = String(request.accountTier);
-  if (request?.portalAccess) queryParams.portalAccess = String(request.portalAccess);
-  if (request?.sort && request.sort !== '') queryParams.sort = String(request.sort);
-  
+  if (request?.accountTier)
+    queryParams.accountTier = String(request.accountTier);
+  if (request?.portalAccess)
+    queryParams.portalAccess = String(request.portalAccess);
+  if (request?.sort && request.sort !== "")
+    queryParams.sort = String(request.sort);
+
+  // Include additional data for providers and estimated revenue
+  if (!queryParams.include) {
+    queryParams.include = "providers,estimatedRevenue";
+  } else {
+    queryParams.include += ",providers,estimatedRevenue";
+  }
+
   return await apiClient.get<ApiResponse<PaginatedResponse<ClientListItem>>>(
-    API_ENDPOINTS.clients.list, 
-    { params: queryParams }
+    API_ENDPOINTS.clients.list,
+    { params: queryParams },
   );
 }
 
 /**
  * Fetch client by ID (client-side)
  */
-export async function getClientByIdClient(id: string): Promise<ApiResponse<Client>> {
-  return await apiClient.get<ApiResponse<Client>>(API_ENDPOINTS.clients.detail(id));
+export async function getClientByIdClient(
+  id: string,
+): Promise<ApiResponse<Client>> {
+  return await apiClient.get<ApiResponse<Client>>(
+    API_ENDPOINTS.clients.detail(id),
+  );
 }
 
 /**
@@ -48,7 +64,7 @@ async function getClientStatsClient(): Promise<{
 }> {
   // TODO: Replace with actual API call
   // const response = await apiClient.get(API_ENDPOINTS.clients.stats);
-  
+
   return {
     totalClients: 0,
     activeClients: 0,
