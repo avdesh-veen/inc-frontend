@@ -1,0 +1,31 @@
+# name: Build and push frontend to ACR
+
+# on:
+#   push:
+#     branches:
+#       - dev
+
+# env:
+#   IMAGE_NAME: emerald-frontend
+
+# jobs:
+#   build-and-push:
+#     name: Build and push to ACR
+#     runs-on: ubuntu-latest
+#     permissions:
+#       contents: read
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
+
+#       - name: Log in to ACR
+#         run: |
+#           echo "${{ secrets.ACR_PASSWORD_DEV }}" | docker login ${{ secrets.ACR_LOGIN_DEV }} -u ${{ secrets.ACR_USERNAME_DEV }} --password-stdin
+#       - name: Build and push Docker image
+#         run: |
+#           IMAGE_TAG=${{ secrets.ACR_LOGIN_DEV }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+#           IMAGE_LATEST=${{ secrets.ACR_LOGIN_DEV }}/${{ env.IMAGE_NAME }}:latest
+#           docker build -t $IMAGE_TAG -t $IMAGE_LATEST --target runner .
+#           docker push $IMAGE_TAG
+#           docker push $IMAGE_LATEST
