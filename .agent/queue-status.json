@@ -1,0 +1,17 @@
+{
+  "runId": "2026-03-08T10-21-21",
+  "tickets": [
+    {
+      "key": "SCRUM-6",
+      "status": "completed"
+    },
+    {
+      "key": "SCRUM-7",
+      "status": "completed"
+    },
+    {
+      "key": "SCRUM-8",
+      "status": "completed"
+    }
+  ]
+}
