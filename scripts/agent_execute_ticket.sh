@@ -5,7 +5,7 @@ TICKET_KEY="${1:-}"
 BASE_BRANCH="${BASE_BRANCH:-dev}"
 ISSUE_FILE=".agent/current-ticket.md"
 STATUS_DIR=".agent"
-OPEN_CODE_CMD="${OPEN_CODE_CMD:-}"
+OPEN_CODE_CMD="${OPEN_CODE_CMD:-opencode}"
 
 if [[ -z "$TICKET_KEY" ]]; then
   echo "Usage: $0 <JIRA_TICKET_KEY>"
