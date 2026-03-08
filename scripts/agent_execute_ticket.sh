@@ -68,9 +68,10 @@ git fetch origin "$BASE_BRANCH"
 git checkout "$BASE_BRANCH"
 git pull --ff-only origin "$BASE_BRANCH"
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
+DIRTY="$(git status --porcelain | grep -v '^?? \.agent/current-ticket\.md$' || true)"
+if [[ -n "$DIRTY" ]]; then
   echo "❌ Working tree is not clean. Commit, stash, or restore changes first."
-  git status --short
+  echo "$DIRTY"
   exit 1
 fi
 
@@ -103,17 +104,12 @@ Implementation expectations:
 - After implementation, stop and return control
 PROMPT
 
-if [[ -z "$OPEN_CODE_CMD" ]]; then
-  echo "❌ OPEN_CODE_CMD is not set."
-  echo "Set it to the exact command you use to run OpenCode non-interactively."
-  echo 'Example shape only: export OPEN_CODE_CMD='\''opencode run --model opencode/trinity-large-preview-free'\'''
-  rm -f "$PROMPT_FILE"
-  exit 1
-fi
-
 echo "==> Running OpenCode"
-echo "Command: $OPEN_CODE_CMD"
-sh -c "$OPEN_CODE_CMD < \"$PROMPT_FILE\""
+echo "Prompt file prepared at: $PROMPT_FILE"
+echo "OpenCode will open using your current opencode.json config."
+echo "When OpenCode finishes applying changes and exits, this script will continue."
+
+opencode || true
 
 rm -f "$PROMPT_FILE"
 
