@@ -34,10 +34,13 @@ interface ClientOverviewTabProps {
   client: Client;
 }
 
+const NOTES_MAX_LENGTH = 100;
+
 export function ClientOverviewTab({
   client,
 }: Readonly<ClientOverviewTabProps>) {
   const [isLoading] = useState(false);
+  const [isNotesExpanded, setIsNotesExpanded] = useState(false);
   const billingContact = client.contacts.find(
     (contact) => contact.contactType === ClientBillingContact.BILLING,
   );
@@ -310,7 +313,22 @@ export function ClientOverviewTab({
           </CardHeader>
           <CardContent>
             {client.internalNotes ? (
-              <p className="text-white/60 text-sm">{client.internalNotes}</p>
+              <div>
+                <p className="text-white/60 text-sm">
+                  {isNotesExpanded ||
+                  client.internalNotes.length <= NOTES_MAX_LENGTH
+                    ? client.internalNotes
+                    : `${client.internalNotes.slice(0, NOTES_MAX_LENGTH)}...`}
+                </p>
+                {client.internalNotes.length > NOTES_MAX_LENGTH && (
+                  <button
+                    onClick={() => setIsNotesExpanded(!isNotesExpanded)}
+                    className="text-xs text-primary hover:underline mt-2"
+                  >
+                    {isNotesExpanded ? "View less" : "View more"}
+                  </button>
+                )}
+              </div>
             ) : (
               <p className="text-white/50 text-sm">No notes</p>
             )}
