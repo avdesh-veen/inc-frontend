@@ -5,7 +5,7 @@ TICKET_KEY="${1:-}"
 BASE_BRANCH="${BASE_BRANCH:-dev}"
 ISSUE_FILE=".agent/current-ticket.md"
 STATUS_DIR=".agent"
-OPEN_CODE_CMD="${OPEN_CODE_CMD:-opencode}"
+OPEN_CODE_CMD="${OPEN_CODE_CMD:-}"
 
 if [[ -z "$TICKET_KEY" ]]; then
   echo "Usage: $0 <JIRA_TICKET_KEY>"
@@ -68,10 +68,9 @@ git fetch origin "$BASE_BRANCH"
 git checkout "$BASE_BRANCH"
 git pull --ff-only origin "$BASE_BRANCH"
 
-DIRTY="$(git status --porcelain | grep -v '^?? \.agent/current-ticket\.md$' || true)"
-if [[ -n "$DIRTY" ]]; then
+if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "❌ Working tree is not clean. Commit, stash, or restore changes first."
-  echo "$DIRTY"
+  git status --short
   exit 1
 fi
 
@@ -104,12 +103,17 @@ Implementation expectations:
 - After implementation, stop and return control
 PROMPT
 
-echo "==> Running OpenCode"
-echo "Prompt file prepared at: $PROMPT_FILE"
-echo "OpenCode will open using your current opencode.json config."
-echo "When OpenCode finishes applying changes and exits, this script will continue."
+if [[ -z "$OPEN_CODE_CMD" ]]; then
+  echo "❌ OPEN_CODE_CMD is not set."
+  echo "Set it to the exact command you use to run OpenCode non-interactively."
+  echo 'Example shape only: export OPEN_CODE_CMD='\''opencode run --model opencode/trinity-large-preview-free'\'''
+  rm -f "$PROMPT_FILE"
+  exit 1
+fi
 
-opencode || true
+echo "==> Running OpenCode"
+PROMPT_TEXT="$(cat "$PROMPT_FILE")"
+opencode run "$PROMPT_TEXT"
 
 rm -f "$PROMPT_FILE"
 
@@ -163,6 +167,48 @@ PR_URL="$(gh pr create \
   --draft)"
 
 rm -f "$PR_BODY_FILE"
+
+COMMENT_FILE="$(mktemp)"
+cat > "$COMMENT_FILE" <<COMMENT
+PR created for $TICKET_KEY
+
+Branch: $BRANCH_NAME
+PR: $PR_URL
+Local gates: lint/typecheck/build/scope passed
+COMMENT
+
+./scripts/jira_comment_on_issue.sh "$TICKET_KEY" "$COMMENT_FILE" || true
+rm -f "$COMMENT_FILE"
+
+echo "==> Resolving PR number"
+PR_NUMBER="$(gh pr view --json number -q '.number')"
+
+echo "==> Waiting for PR checks"
+set +e
+./scripts/agent_wait_pr_green.sh "$PR_NUMBER"
+WAIT_RC=$?
+set -e
+
+if [[ "$WAIT_RC" -eq 0 ]]; then
+  echo "✅ PR is green"
+elif [[ "$WAIT_RC" -eq 2 ]]; then
+  echo "==> PR checks failed, attempting code repair"
+  ./scripts/agent_repair_pr_ci.sh "$TICKET_KEY" "$PR_NUMBER"
+
+  echo "==> Waiting again after repair"
+  set +e
+  ./scripts/agent_wait_pr_green.sh "$PR_NUMBER"
+  WAIT_RC=$?
+  set -e
+
+  if [[ "$WAIT_RC" -ne 0 ]]; then
+    echo "❌ PR still not green after repair attempt"
+    exit 1
+  fi
+else
+  echo "❌ PR checks did not complete successfully"
+  exit 1
+fi
 
 echo "✅ Ticket execution completed for $TICKET_KEY"
 echo "Branch: $BRANCH_NAME"
