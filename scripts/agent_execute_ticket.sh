@@ -112,8 +112,8 @@ if [[ -z "$OPEN_CODE_CMD" ]]; then
 fi
 
 echo "==> Running OpenCode"
-echo "Command: $OPEN_CODE_CMD"
-sh -c "$OPEN_CODE_CMD < \"$PROMPT_FILE\""
+PROMPT_TEXT="$(cat "$PROMPT_FILE")"
+opencode run "$PROMPT_TEXT"
 
 rm -f "$PROMPT_FILE"
 
