@@ -168,6 +168,48 @@ PR_URL="$(gh pr create \
 
 rm -f "$PR_BODY_FILE"
 
+COMMENT_FILE="$(mktemp)"
+cat > "$COMMENT_FILE" <<COMMENT
+PR created for $TICKET_KEY
+
+Branch: $BRANCH_NAME
+PR: $PR_URL
+Local gates: lint/typecheck/build/scope passed
+COMMENT
+
+./scripts/jira_comment_on_issue.sh "$TICKET_KEY" "$COMMENT_FILE" || true
+rm -f "$COMMENT_FILE"
+
+echo "==> Resolving PR number"
+PR_NUMBER="$(gh pr view --json number -q '.number')"
+
+echo "==> Waiting for PR checks"
+set +e
+./scripts/agent_wait_pr_green.sh "$PR_NUMBER"
+WAIT_RC=$?
+set -e
+
+if [[ "$WAIT_RC" -eq 0 ]]; then
+  echo "✅ PR is green"
+elif [[ "$WAIT_RC" -eq 2 ]]; then
+  echo "==> PR checks failed, attempting code repair"
+  ./scripts/agent_repair_pr_ci.sh "$TICKET_KEY" "$PR_NUMBER"
+
+  echo "==> Waiting again after repair"
+  set +e
+  ./scripts/agent_wait_pr_green.sh "$PR_NUMBER"
+  WAIT_RC=$?
+  set -e
+
+  if [[ "$WAIT_RC" -ne 0 ]]; then
+    echo "❌ PR still not green after repair attempt"
+    exit 1
+  fi
+else
+  echo "❌ PR checks did not complete successfully"
+  exit 1
+fi
+
 echo "✅ Ticket execution completed for $TICKET_KEY"
 echo "Branch: $BRANCH_NAME"
 echo "PR: $PR_URL"
