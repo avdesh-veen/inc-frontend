@@ -3,6 +3,6 @@
   "provider": {
     "openai": {}
   },
-  "model": "openai/gpt-4.1",
+  "model": "MiniMax M2.5 Free OpenCode Zen",
   "small_model": "openai/gpt-4.1-mini"
 }
